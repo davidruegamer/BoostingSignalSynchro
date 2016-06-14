@@ -3,7 +3,8 @@
 # install.packages("FDboost", repos="http://R-Forge.R-project.org")
 library("parallel")
 library("FDboost")
-library("splines")        
+library("splines")
+library("fda")
 
 source("../functions/ranHist.R")
 source("../functions/createRandomRespFolds.R")
