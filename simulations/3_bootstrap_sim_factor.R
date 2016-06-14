@@ -2,7 +2,16 @@
 ### Simulation code for section 4.3 (uncertainty quantification)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+if(length(list.files("bootGame")) == 0) dir.create("bootGame")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresBoot = 25
 
 # fix setting
 obsPerTra <- c(40)
@@ -78,8 +87,8 @@ for(nrSim in 1:nrSims){
                        argvals = c("s","t"),
                        idvars = c("repIDx"), 
                        retBootCoefs = TRUE,
-                       mcCores = 48))
+                       mcCores = coresBoot))
   
-  saveRDS(bootR,file=paste0("results/bootGameIA2/boot_gameIA_nrSim",nrSim,".RDS"))
+  saveRDS(bootR,file=paste0("results/bootGame/boot_gameIA_nrSim",nrSim,".RDS"))
   
 }

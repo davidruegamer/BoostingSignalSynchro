@@ -2,7 +2,16 @@
 ### Simulation code for section 4.2 (missspecification)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
 
 ######### settings
 addME <- FALSE # TRUE
@@ -10,18 +19,18 @@ nuC <- c(0.1)
 n <- c(80, 320)
 obsPerTra <- c(20, 40, 60)
 SNR <- c(0.1, 1, 10)
-setup = c("histAndGame","histGameIA")
+setup = c("histAndGame", "histGameIA")
 nrSims = 100
 
 ######### generate all combinations of different settings
-setupDF <- expand.grid(list(setup=setup,
-                            n=n,
-                            SNR=SNR,
-                            obsPerTra=obsPerTra))
+setupDF <- expand.grid(list(setup = setup,
+                            n = n,
+                            SNR = SNR,
+                            obsPerTra = obsPerTra))
 setupDF$setup <- as.character(setupDF$setup)
 
 ######### parallelize over different settings
-resSim <- mclapply(1:nrow(setupDF),function(i){
+resSim <- mclapply(1:nrow(setupDF), function(i){
   
   ######### extract settings
   setup = setupDF$setup[i]
@@ -73,16 +82,16 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     dat$Yvec <- Yvec <- as.vector(dat$Yi)
 
     mod2 <- FDboost(fff,
-                      timeformula = ~ bbs(t, df=2.5), data=dat,
-                      control=boost_control(mstop=2500,nu=0.1)
+                    timeformula = ~ bbs(t, df=2.5), 
+                    data=dat,
+                    control = boost_control(mstop = 2500, nu = 0.1)
       )
     
     gridEnd = 2500
     gridStart = 1
 
     ######### validate
-    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, #folds=ppmat, 
-                  mc.cores=1)#4)
+    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, mc.cores = coresCV)
     modFin <- mod2[mstop(cvr)]
     
     findEffects <- which(c(4:7)%in%ind)
@@ -101,7 +110,7 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
       predEff <- coef(modFin,which=2,n1=obsPerTra,n2=obsPerTra)$smterms[[1]]$value
       predEff[predEff==0] <- NA
       
-      relimseMain <- sum(c(((predEff-trueX1eff)^2)),na.rm=T)/sum(c(trueX1eff^2),na.rm = T)
+      relimseMain <- sum(c(((predEff-trueX1eff)^2)),na.rm=T) / sum(c(trueX1eff^2),na.rm = T)
       
       
     }
@@ -115,19 +124,19 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
       predEff1[predEff1==0] <- NA
       truth1[lower.tri(truth1)] <- NA
 
-      relimseIAGame <- sum(c(((predEff1-truth1)^2)),na.rm=T)/sum(c(truth1^2),na.rm = T)
+      relimseIAGame <- sum(c(((predEff1-truth1)^2)),na.rm=T) / sum(c(truth1^2),na.rm = T)
       
     }
 
-    simDF[[nrSim]] <- (cbind(data.frame(relimseMain=relimseMain, relimseIAGame=relimseIAGame, 
-                                        mstopIter=mstop(cvr),nrSim=nrSim),setupDF[i,]))
+    simDF[[nrSim]] <- (cbind(data.frame(relimseMain = relimseMain, relimseIAGame = relimseIAGame, 
+                                        mstopIter = mstop(cvr), nrSim = nrSim), setupDF[i,]))
     
   }
   return(simDF)
   
-},mc.cores=18)
+}, mc.cores = coresSettings)
 
-saveRDS(resSim,file="tempMis_iaG.RDS")
+saveRDS(resSim,file="results/tempMis_iaG.RDS")
 
 res <- do.call("rbind",unlist(resSim,recursive=F))
 

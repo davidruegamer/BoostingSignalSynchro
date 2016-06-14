@@ -2,7 +2,17 @@
 ### Simulation code for section 4.2 (missspecification)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
+
 
 ######### settings
 addME <- FALSE # TRUE
@@ -79,8 +89,9 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     dat$Yvec <- Yvec <- as.vector(dat$Yi)
 
     mod2 <- FDboost(fff,
-                      timeformula = ~ bbs(t, df=2.5), data=dat,
-                      control=boost_control(mstop=2500,nu=0.1)
+                    timeformula = ~ bbs(t, df = 2.5), 
+                    data = dat,
+                    control = boost_control(mstop = 2500, nu = 0.1)
       )
     
     gridEnd = 2500
@@ -90,8 +101,8 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     ppmat <- createRandomRespFolds(ranVar = dat$g3, folds = 8, sLength = obsPerTra)
     
     ######### validate
-    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, folds=ppmat, 
-                  mc.cores=2)#4)
+    cvr <- cvrisk(mod2, grid = gridStart:gridEnd, folds = ppmat, 
+                  mc.cores = coresCV)
     modFin <- mod2[mstop(cvr)]
     
     findEffects <- which(c(4:7)%in%ind)
@@ -145,9 +156,9 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
   }
   return(simDF)
   
-},mc.cores=12)
+}, mc.cores = coresSettings)
 
-saveRDS(resSim,file="tempMis_iaR.RDS")
+saveRDS(resSim,file="results/tempMis_iaR.RDS")
 
 res <- do.call("rbind",unlist(resSim,recursive=F))
 

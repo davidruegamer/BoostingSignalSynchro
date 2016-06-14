@@ -2,7 +2,16 @@
 ### Simulation code for comparison of different parametrizations / model w/wo shrinkage
 #######################################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
 
 ######### settings
 n <- c(80, 320)
@@ -68,7 +77,7 @@ for(i in length(resSim):10){
     )
     
     ######### validate
-    cvr1 <- cvrisk(modCurrent, folds = foldMat, mc.cores=25)
+    cvr1 <- cvrisk(modCurrent, folds = foldMat, mc.cores = coresCV)
     modCurrentFin <- modCurrent[mstop(cvr1)]
     
     ######### fit model 2 (with deviations from a main historical effect but with no shrinkage for g2)
@@ -82,7 +91,7 @@ for(i in length(resSim):10){
     )
     
     ######### validate
-    cvr2 <- cvrisk(modWoShrink, folds = foldMat, mc.cores=25)
+    cvr2 <- cvrisk(modWoShrink, folds = foldMat, mc.cores = coresCV)
     modWoShrinkFin <- modWoShrink[mstop(cvr2)]
     
     ######### fit model 3 (with deviations from a main historical effect but no shrinkage trough pen.mat.)
@@ -96,7 +105,7 @@ for(i in length(resSim):10){
     )
     
     ######### validate
-    cvr3 <- cvrisk(modXa0, folds = foldMat, mc.cores=25)
+    cvr3 <- cvrisk(modXa0, folds = foldMat, mc.cores = coresCV)
     modXa0Fin <- modXa0[mstop(cvr3)]
 
     
@@ -109,7 +118,7 @@ for(i in length(resSim):10){
     )
     
     ######### validate
-    cvr4 <- cvrisk(modWoC, folds = foldMat, mc.cores=25)
+    cvr4 <- cvrisk(modWoC, folds = foldMat, mc.cores = coresCV)
     modWoCFin <- modWoC[mstop(cvr4)]
 
     
@@ -123,7 +132,7 @@ for(i in length(resSim):10){
     )
     
     ######### validate
-    cvr5 <- cvrisk(modXa0woC, folds = foldMat, mc.cores=25)
+    cvr5 <- cvrisk(modXa0woC, folds = foldMat, mc.cores = coresCV)
     modXa0woCFin <- modXa0woC[mstop(cvr5)]
     
     ###########################################################################
@@ -180,7 +189,7 @@ for(i in length(resSim):10){
     
     }, error=function(e)return(e))
     
-  }, mc.cores=1)
+  }, mc.cores = coresSettings)
   
   saveRDS(simDF, file=paste0("results/perfParam/","simNr",i,".RDS"))
   resSim[[i]] <- simDF
@@ -188,4 +197,4 @@ for(i in length(resSim):10){
 }
 
 ######### save results
-saveRDS(resSim,file="iaG_comp_param.RDS")
+saveRDS(resSim,file="results/iaG_comp_param.RDS")

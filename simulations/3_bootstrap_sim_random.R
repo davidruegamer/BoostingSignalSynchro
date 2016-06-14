@@ -2,7 +2,15 @@
 ### Simulation code for section 4.3 (uncertainty quantification)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresBoot = 25
 
 # fix setting
 n <- c(80)
@@ -73,7 +81,7 @@ mclapply(1:100, function(nrSim){
                        data = dat, 
                        obsPerTra = obsPerTra, 
                        by = by,
-                       mcCores = 25))
+                       mcCores = coresBoot))
   
   saveRDS(bootR, file = paste0("results/bootRandIA3/boot_randIA_nrSim", nrSim, ".RDS"))
   

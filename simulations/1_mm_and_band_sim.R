@@ -2,7 +2,16 @@
 ### Simulation code for section 4.1 
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 15
 
 # true underlying function for simulation of multi-modal coefficient surfaces
 hillyFun <- function(s,t) sin(10 * abs(s-t)) * cos(10 * t)
@@ -10,7 +19,7 @@ hillyFun <- function(s,t) sin(10 * abs(s-t)) * cos(10 * t)
 lD <- function(s, t) s < t
 # fixed settings
 obsPerTra = 40
-nrSims = 100
+
 
 nn <- c(80, 320, 640)
 ss <- c(1/10, 1, 10)
@@ -85,7 +94,7 @@ res <- mclapply(1:nrow(setupDF), function(set){
                   timeformula = ~ bbs(t),
                   data = data1)
 
-    ppt <- cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type="kfold"), mc.cores=5)
+    ppt <- cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type="kfold"), mc.cores = coresCV)
     
     g1 <- coef(m2[mstop(ppt)],which=2)
     g1c <- g1$smterms[[1]]$value
@@ -107,7 +116,7 @@ res <- mclapply(1:nrow(setupDF), function(set){
   
   return(resDF)
   
-}, mc.cores = 15)
+}, mc.cores = coresSettings)
 
 # save results
 saveRDS(res,file="results/mm_sim2.RDS")
@@ -189,7 +198,7 @@ res <- mclapply(1:nrow(setupDF),function(set){
 
     if(class(m2)!="try-error"){
       
-      ppt <- try(cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type = "kfold"), mc.cores = 5))
+      ppt <- try(cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type = "kfold"), mc.cores = coresCV))
       
       if(class(ppt)!="try-error"){
         
@@ -211,7 +220,7 @@ res <- mclapply(1:nrow(setupDF),function(set){
   
   return(resDF)
   
-}, mc.cores = 15)
+}, mc.cores = coresSettings)
 
 # save results
 saveRDS(res,file="results/band_sim2.RDS")

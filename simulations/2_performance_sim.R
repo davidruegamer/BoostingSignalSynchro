@@ -2,7 +2,17 @@
 ### Simulation code for section 4.2 and 4.4 (step-length comparison)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
+
 
 ######### settings
 addME <- FALSE # TRUE
@@ -93,7 +103,7 @@ for(i in 1:nrow(setupDF)){
     
     ######### validate
     cvr <- cvrisk(mod2, grid = gridStart:gridEnd, 
-                  folds = ppmat, mc.cores = 8)
+                  folds = ppmat, mc.cores = coresCV)
     modFin <- mod2[mstop(cvr)]
     
     findEffects <- which(c(4:7)%in%ind)
@@ -183,15 +193,15 @@ for(i in 1:nrow(setupDF)){
                                         relimseIAGameRan = t(unlist(relimseIAGameRan)),
                                         mstopIter = mstop(cvr), nrSim = nrSim), setupDF[i,]))
     
-  }, mc.cores=5)
+  }, mc.cores = coresSettings)
   
   resSim[[i]] <- simDF
   
 }
 
 ######### save results
-saveRDS(resSim,file="tempPer.RDS")
+saveRDS(resSim,file="results/tempPer.RDS")
 
 res <- do.call("rbind",unlist(resSim,recursive=F))
 
-saveRDS(res,file="perf_sim.RDS")
+saveRDS(res,file="results/perf_sim.RDS")

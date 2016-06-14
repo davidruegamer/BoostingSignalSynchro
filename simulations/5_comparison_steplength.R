@@ -2,7 +2,16 @@
 ### Simulation code for section 4.5 (comparison step-length)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
 
 ######### settings
 addME <- FALSE
@@ -20,7 +29,7 @@ setupDF <- expand.grid(list(nuC=nuC,
                             SNR=SNR))
 
 ######### parallelize over different settings
-resSim <- mclapply(1:nrow(setupDF),function(i){
+resSim <- mclapply(1:nrow(setupDF), function(i){
   
   ######### extract settings
   nuC = setupDF$nuC[i]
@@ -85,7 +94,7 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     
     ######### validate
     cvr <- cvrisk(mod2, grid=gridStart:gridEnd, 
-                  folds=ppmat, mc.cores=2)
+                  folds=ppmat, mc.cores = coresCV)
     modFin <- mod2[mstop(cvr)]
     
     findEffects <- which(c(4:7)%in%ind)
@@ -178,14 +187,14 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
   }
   return(simDF)
   
-},mc.cores=18)
+}, mc.cores = coresSettings)
 
 ######### save results
-saveRDS(resSim, file = "temp.RDS")
+saveRDS(resSim, file = "results/temp.RDS")
 
 res <- do.call("rbind", unlist(resSim, recursive = F))
 
-saveRDS(res, file = "comparison_nu_sim.RDS")
+saveRDS(res, file = "results/comparison_nu_sim.RDS")
 
 
 

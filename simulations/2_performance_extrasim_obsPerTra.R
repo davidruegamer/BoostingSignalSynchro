@@ -2,7 +2,17 @@
 ### Simulation code for section 4.2 and 4.4 (step-length comparison)
 ############################################################################
 
-source("0_libs_funs.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
+
 
 ######### settings
 addME <- FALSE # TRUE
@@ -61,7 +71,7 @@ for(i in 1:nrow(setupDF)){
     gridStart = 1
     
     ######### validate
-    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, mc.cores=2, 
+    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, mc.cores = coresCV, 
                   folds = cvLong(id = mod2$id, weights = model.weights(mod2), B = 10))
     modFin <- mod2[mstop(cvr)]
     
@@ -107,15 +117,15 @@ for(i in 1:nrow(setupDF)){
     return(cbind(data.frame(relimseMain=relimseMain, relimseIAGame=relimseIAGame, 
                                         mstopIter=mstop(cvr),nrSim=nrSim),setupDF[i,]))
     
-  }, mc.cores=50)
+  }, mc.cores = coresSettings)
   
   resSim[[i]] <- simDF
   
 }
 
 ######### save results
-saveRDS(resSim,file="tempPer_obsPerTra.RDS")
+saveRDS(resSim,file="results/tempPer_obsPerTra.RDS")
 
 res <- do.call("rbind",unlist(resSim,recursive=F))
 
-saveRDS(res,file="perf_sim_obsPerTra.RDS")
+saveRDS(res,file="results/perf_sim_obsPerTra.RDS")

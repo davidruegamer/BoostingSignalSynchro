@@ -2,13 +2,17 @@
 ### Simulation code for section 4.2 (missspecification)
 ############################################################################
 
-library("mboost")
-library("FDboost")
-library("splines")        
-source("../functions/ranHist.R")
-source("../functions/createRandomRespFolds.R")
-source("../functions/dataGenProc.R")
-source("../functions/matggplot.R")
+source("0_libs_funs.R", chdir = T)
+if(length(list.files("results")) == 0) dir.create("results")
+
+nrSims = 100
+## if you just want to test the code:
+if(FALSE) nrSims = 2
+
+### core usage
+coresCV = 5
+coresSettings = 5
+
 
 ######### settings
 addME <- TRUE
@@ -26,7 +30,7 @@ setupDF <- expand.grid(list(setup=setup,
 setupDF$setup <- as.character(setupDF$setup)
 
 ######### parallelize over different settings
-resSim <- mclapply(1:nrow(setupDF),function(i){
+resSim <- mclapply(1:nrow(setupDF), function(i){
   
   ######### extract settings
   setup = setupDF$setup[i]
@@ -79,35 +83,42 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     dat$Yvec <- Yvec <- as.vector(dat$Yi)
     
     ######### fit model
-    myBlg <<-  with(dat,(bols(g2, index=repIDx, df=1) %Xc%
-                           brandom(g3, index=repIDx, df=1)))
+    myBlg <<-  with(dat,(bols(g2, index = repIDx, df = 1) %Xc%
+                           brandom(g3, index = repIDx, df = 1)))
     
     
     if(setup=="full"){
       
       mod2 <- FDboost(Yi ~ 1 +  
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% bolsc(g2, index=repIDx, df=1) +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% brandomc(g3, index=repIDx, df=1) +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% myBlg +
-                        bolsc(g2, df=6) +
-                        brandomc(g3, df=6) +
-                        bols(g2, df=2) %Xc% brandom(g3, df=3),
-                      timeformula = ~ bbs(t, df=2.5), data=dat,
-                      control=boost_control(mstop=2500,nu=0.1)
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') +
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') %X% 
+                        bolsc(g2, index = repIDx, df = 1) +
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') %X% 
+                        brandomc(g3, index = repIDx, df = 1) +
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') %X% 
+                        myBlg +
+                        bolsc(g2, df = 6) +
+                        brandomc(g3, df = 6) +
+                        bols(g2, df = 2) %Xc% brandom(g3, df = 3),
+                      timeformula = ~ bbs(t, df = 2.5), 
+                      data = dat,
+                      control = boost_control(mstop = 2500, nu = 0.1)
       )
       
     }else{
       
       mod2 <- FDboost(Yi ~ 1 +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% bolsc(g2, index=repIDx, df=1) +
-                        bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% brandomc(g3, index=repIDx, df=1) +
-                        bolsc(g2, df=6) +
-                        brandomc(g3, df=6) +
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') +
+                        bhistx(X1h, df = 15, knots = 5, differences=2, standard = 'length') %X% 
+                        bolsc(g2, index = repIDx, df = 1) +
+                        bhistx(X1h, df = 15, knots = 5, differences = 2, standard = 'length') %X% 
+                        brandomc(g3, index = repIDx, df = 1) +
+                        bolsc(g2, df = 6) +
+                        brandomc(g3, df = 6) +
                         bols(g2, df=2) %Xc% brandom(g3, df=3) ,
-                      timeformula = ~ bbs(t, df=2.5), data=dat,
-                      control=boost_control(mstop=2500,nu=0.1)
+                      timeformula = ~ bbs(t, df=2.5), 
+                      data = dat,
+                      control = boost_control(mstop = 2500, nu = 0.1)
       )
       
     }
@@ -119,17 +130,16 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     ppmat <- createRandomRespFolds(ranVar = dat$g3, sLength = obsPerTra)
     
     ######### validate
-    cvr <- cvrisk(mod2, grid=gridStart:gridEnd, 
-                  folds=ppmat, mc.cores=1)#4)
+    cvr <- cvrisk(mod2, grid = gridStart:gridEnd, 
+                  folds = ppmat, mc.cores = coresCV)
     modFin <- mod2[mstop(cvr)]
     
-    findEffects <- which(c(4:7)%in%ind)
+    findEffects <- which(c(4:7) %in% ind)
     selCourse <- selected(modFin)
     
     relimseMain <- relimseIAGame <- NA
     relimseIARan <- as.list(rep(NA,length(levels(dat$g3)))) 
-    # relimseIAGameRan <- as.list(rep(NA,length(levels(interaction(dat$g2,dat$g3)))))
-    
+
     ######### get relimses
     
     
@@ -142,9 +152,6 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
       predEff <- coef(modFin,which=2,n1=obsPerTra,n2=obsPerTra)$smterms[[1]]$value
       predEff[predEff==0] <- NA
       
-      # print(matggplot(listOfMatrices = list(trueX1eff,predEff), 
-      #                 namesForGrids = c("truth","FDboost")))
-      # 
       relimseMain <- sum(c(((predEff-trueX1eff)^2)),na.rm=T)/sum(c(trueX1eff^2),na.rm = T)
       
       
@@ -181,56 +188,22 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
         predEff1 <- ccc[[1]][[nr]]$value
         predEff1[predEff1==0] <- NA
         truth1[lower.tri(truth1)] <- NA
-        #truth1[sapply(c(truth1),function(s)all.equal(s,0)=="TRUE")] <- NA
-        
-        # print(matggplot(listOfMatrices = list(truth1,predEff1), 
-        #                 namesForGrids = c("truth","FDboost")))
-        
+    
         relimseIARan[[nr]] <- sum(c(((predEff1-truth1)^2)),na.rm=T)/sum(c(truth1^2),na.rm = T)
         
       }
     }
     
-    # ## 3-way Interaction Effect
-    # 
-    # 
-    # if(4%in%findEffects & 5%in%selCourse){
-    #   
-    #   ccc <- coef(modFin,which=5,n1=obsPerTra,n2=obsPerTra)$smterms
-    #   cccSeqFac <- sapply(ccc[[1]][1:(length(ccc[[1]])-2)],
-    #                       function(x)x$add_main)
-    #   cccSeqFac <- gsub("g2=","",gsub(", g3=",".",cccSeqFac,fixed=T),fixed=T)
-    #   levIA <- levels(interaction(g2,g3))
-    #   
-    #   for(nr in 1:length(levIA)){
-    #     
-    #     truth1 <- dat$trueDoubleEff[[nr]](dat$s,dat$t)
-    #     
-    #     predEff1 <- ccc[[1]][[which(cccSeqFac==levIA[nr])]]$value
-    #     predEff1[predEff1==0] <- NA
-    #     truth1[lower.tri(truth1)] <- NA
-    #     
-    #     print(matggplot(listOfMatrices = list(truth1,predEff1), 
-    #                     namesForGrids = c("truth","FDboost")))
-    #     
-    #     relimseIAGameRan[[nr]] <- sum(c(((predEff1-truth1)^2)),na.rm=T)/sum(c(truth1^2),na.rm = T)
-    #     
-    #   }
-    #   
-    # }
-    
-    
-    simDF[[nrSim]] <- (cbind(data.frame(relimseMain=relimseMain, relimseIAGame=relimseIAGame, 
-                                        relimseIARan=t(unlist(relimseIARan)), 
-                                        #relimseIAGameRan=t(unlist(relimseIAGameRan)),
-                                        mstopIter=mstop(cvr),nrSim=nrSim),setupDF[i,]))
+    simDF[[nrSim]] <- (cbind(data.frame(relimseMain = relimseMain, relimseIAGame = relimseIAGame, 
+                                        relimseIARan = t(unlist(relimseIARan)), 
+                                        mstopIter = mstop(cvr), nrSim = nrSim), setupDF[i,]))
     
   }
   return(simDF)
   
-},mc.cores=12)
+}, mc.cores = coresSettings)
 
-saveRDS(resSim,file="tempMis.RDS")
+saveRDS(resSim,file="results/tempMis.RDS")
 
 res <- do.call("rbind",unlist(resSim,recursive=F))
 
