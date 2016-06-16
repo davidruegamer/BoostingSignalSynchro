@@ -4,6 +4,7 @@
 
 source("0_libs_funs.R", chdir = T)
 if(length(list.files("results")) == 0) dir.create("results")
+if(length(list.files("results/bootHist")) == 0) dir.create("results/bootHist")
 
 nrSims = 100
 ## if you just want to test the code:
@@ -16,8 +17,9 @@ coresBoot = 25
 obsPerTra <- c(40)
 nuC <- 0.1
 setup = "histOnly"
-nrSims = 100
 bootNr = 100
+## if you just want to test the code:
+if(FALSE) bootNr = 2
 n <- c(160)
 SNR <- c(1)
 
@@ -75,6 +77,6 @@ for(nrSim in 1:nrSims){
                        retBootCoefs = TRUE,
                        mcCores = coresBoot))
 
-  saveRDS(bootR,file=paste0("results/bootHistOnly3/boot_histOnly_nrSim",nrSim,".RDS"))
+  saveRDS(bootR,file=paste0("results/bootHist/boot_histOnly_nrSim",nrSim,".RDS"))
   
 }

@@ -4,6 +4,8 @@
 
 source("0_libs_funs.R", chdir = T)
 if(length(list.files("results")) == 0) dir.create("results")
+if(length(list.files("results/bootRandom")) == 0) dir.create("results/bootRandom")
+
 
 nrSims = 100
 ## if you just want to test the code:
@@ -18,8 +20,9 @@ SNR <- c(1)
 obsPerTra <- c(60)
 nuC <- 0.1
 setup = "histRandIA"
-nrSims = 100
 bootNr = 100
+## if you just want to test the code:
+if(FALSE) bootNr = 2
 nrRanEf = 10
 
 set.seed(42)
@@ -49,7 +52,7 @@ dat <- dataGenProc(n = n,
 )
 
 # do for 100 iterations
-mclapply(1:100, function(nrSim){
+mclapply(1:nrSims, function(nrSim){
   
   set.seed(nrSim)
   
@@ -83,6 +86,6 @@ mclapply(1:100, function(nrSim){
                        by = by,
                        mcCores = coresBoot))
   
-  saveRDS(bootR, file = paste0("results/bootRandIA3/boot_randIA_nrSim", nrSim, ".RDS"))
+  saveRDS(bootR, file = paste0("results/bootRandom/boot_randIA_nrSim", nrSim, ".RDS"))
   
 }, mc.cores=1)

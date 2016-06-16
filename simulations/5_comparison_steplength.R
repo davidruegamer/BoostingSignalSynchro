@@ -20,7 +20,6 @@ n <- c(80, 320, 640)
 obsPerTra <- c(40)
 SNR <- c(1/10, 1, 10)
 setup = "withoutDoubleVar" # "full" # "histOnly"
-nrSims = 100
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(nuC=nuC,

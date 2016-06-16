@@ -21,7 +21,7 @@ n <- c(80, 320)
 obsPerTra <- c(40) #, 60)
 SNR <- c(1/20, 5, 20)
 setup = c("full", "withoutDoubleVar")
-nrSims = 100
+
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(setup=setup,
@@ -165,11 +165,7 @@ resSim <- mclapply(1:nrow(setupDF), function(i){
       predEff1 <- ccc[[1]][[1]]$value
       predEff1[predEff1==0] <- NA
       truth1[lower.tri(truth1)] <- NA
-      #truth1[sapply(c(truth1),function(s)all.equal(s,0)=="TRUE")] <- NA
-      
-      print(matggplot(listOfMatrices = list(truth1,predEff1),
-                      namesForGrids = c("truth","FDboost")))
-      
+
       relimseIAGame <- sum(c(((predEff1-truth1)^2)),na.rm=T)/sum(c(truth1^2),na.rm = T)
       
     }

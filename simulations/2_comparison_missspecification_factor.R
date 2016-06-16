@@ -20,7 +20,6 @@ n <- c(80, 320)
 obsPerTra <- c(20, 40, 60)
 SNR <- c(0.1, 1, 10)
 setup = c("histAndGame", "histGameIA")
-nrSims = 100
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(setup = setup,

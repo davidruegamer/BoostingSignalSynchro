@@ -4,6 +4,7 @@
 
 source("0_libs_funs.R", chdir = T)
 if(length(list.files("results")) == 0) dir.create("results")
+if(length(list.files("results/perfParam")) == 0) dir.create("results/perfParam")
 
 nrSims = 100
 ## if you just want to test the code:
@@ -19,7 +20,6 @@ obsPerTra <- c(60)
 nrFacLev <- c(4,10)
 SNR <- c(1/10, 1, 10)
 setup = c("histGameIA")
-nrSims = 100
 nrBS = 25
 
 ######### generate all combinations of different settings
@@ -31,7 +31,7 @@ setupDF <- expand.grid(list(nrFacLev=nrFacLev,
 resSim <- vector("list",nrow(setupDF))
 
 # do for all settings
-for(i in length(resSim):10){
+for(i in 1:length(resSim)){
   
   ######### extract settings
   nrFacLev = setupDF$nrFacLev[i]

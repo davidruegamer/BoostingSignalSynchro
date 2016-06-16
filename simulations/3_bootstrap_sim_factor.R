@@ -4,7 +4,7 @@
 
 source("0_libs_funs.R", chdir = T)
 if(length(list.files("results")) == 0) dir.create("results")
-if(length(list.files("bootGame")) == 0) dir.create("bootGame")
+if(length(list.files("results/bootGame")) == 0) dir.create("results/bootGame")
 
 nrSims = 100
 ## if you just want to test the code:
@@ -17,8 +17,9 @@ coresBoot = 25
 obsPerTra <- c(40)
 nuC <- 0.1
 setup = "histGameIA"
-nrSims = 100
 bootNr = 100
+## if you just want to test the code:
+if(FALSE) bootNr = 2
 n <- c(160)
 SNR <- c(1)
 

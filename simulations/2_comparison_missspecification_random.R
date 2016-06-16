@@ -22,7 +22,6 @@ n <- 192 # c(80,320)
 SNR <- c(0.1, 1, 10)
 nrRanEf <- c(8, 16)
 setup = c("histAndRand", "histRandIA")
-nrSims = 100
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(setup=setup,
@@ -51,8 +50,7 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
                      seed = 12,
                      setup = "histGameIA",
                      nrOfResp = nrSims,
-                     nrRanEf = nrRanEf,
-                     partRanEf = n/nrRanEf
+                     nrRanEf = nrRanEf
   )
   
   ######### get model specification
@@ -151,7 +149,9 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
     
     simDF[[nrSim]] <- (cbind(data.frame(relimseMain=relimseMain, 
                                         relimseIARan=t(unlist(relimseIARan)), 
-                                        mstopIter=mstop(cvr),nrSim=nrSim),setupDF[i,]))
+                                        mstopIter=mstop(cvr),
+                                        nrSim=nrSim),
+                             setupDF[i,]))
     
   }
   return(simDF)
@@ -159,7 +159,3 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
 }, mc.cores = coresSettings)
 
 saveRDS(resSim,file="results/tempMis_iaR.RDS")
-
-res <- do.call("rbind",unlist(resSim,recursive=F))
-
-saveRDS(res,file="results/misspecification_sim_iaR.RDS")
