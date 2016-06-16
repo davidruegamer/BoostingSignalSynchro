@@ -2,5 +2,5 @@
 
 ## Online Supplementary
 
-* functions: Functions, which were used in addition to packages loaded in each simulation
+* functions: Functions, which are sourced in simulations in addition to used packages
 * simulations: Simulations of section 4, sorted by the number of subsection
