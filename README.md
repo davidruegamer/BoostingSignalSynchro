@@ -9,5 +9,5 @@
   + 2_[...].R: Codes for performance simulations
   + 3_comparison_misspecification.R: Code for performance in misspecified settings
   + 4_[...].R: Codes for bootstrap simulations
-  + 5_[...].R: Codes for parametrisation and penalisation comparisons
-  + 6_[...].R: Codes for step-length comparisons
+  + 5_performance_sim_parametrisation_penalisation.R: Codes for parametrisation and penalisation comparisons
+  + 6_comparison_steplength.R: Codes for step-length comparisons
