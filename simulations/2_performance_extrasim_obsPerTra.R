@@ -1,5 +1,5 @@
 ############################################################################
-### Simulation code for section 4.2 and 4.4 (step-length comparison)
+### Simulation code for section 4.2 
 ############################################################################
 
 source("0_libs_funs.R", chdir = T)

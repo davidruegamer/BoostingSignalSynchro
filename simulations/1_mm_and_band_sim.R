@@ -11,7 +11,7 @@ if(FALSE) nrSims = 2
 
 ### core usage
 coresCV = 5
-coresSettings = 15
+coresSettings = 9
 
 # true underlying function for simulation of multi-modal coefficient surfaces
 hillyFun <- function(s,t) sin(10 * abs(s-t)) * cos(10 * t)
@@ -21,10 +21,12 @@ lD <- function(s, t) s < t
 obsPerTra = 40
 
 
-nn <- c(80, 320, 640)
+nn <- c(80, 160, 320, 640)
 ss <- c(1/10, 1, 10)
-bd <- c(5, 7, 9, 11) 
-k <- c(5, 15)
+bd <- c(#5, 7, 9, 
+  11) 
+k <- c(#5, 
+  15)
 setupDF <- expand.grid(list(nn = nn, ss = ss, bd = bd, k = k))
 
 set.seed(42)
@@ -43,6 +45,8 @@ res <- mclapply(1:nrow(setupDF), function(set){
   
   # for nrSims repetitions do the following
   for(nrSim in 1:nrSims){
+    
+    # 84, 21, 52, 53
     
     obsPerTra = 40
     
@@ -90,11 +94,12 @@ res <- mclapply(1:nrow(setupDF), function(set){
                                 df = 5, 
                                 knots = 25, 
                                 limits = lD),
-                  control = boost_control(mstop = 300),
+                  control = boost_control(mstop = 1000),
                   timeformula = ~ bbs(t),
                   data = data1)
 
-    ppt <- cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type="kfold"), mc.cores = coresCV)
+    ppt <- cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type="kfold",
+                                                        B = 15), mc.cores = coresCV)
     
     g1 <- coef(m2[mstop(ppt)],which=2)
     g1c <- g1$smterms[[1]]$value
@@ -141,7 +146,9 @@ res <- mclapply(1:nrow(setupDF),function(set){
   resDF <- vector("list",nrSims)
   
   for(nrSim in 1:nrSims){
-    
+
+    # 88, 77, 18
+        
     obsPerTra = 40
     data1 <- pffrSimVar(scenario = c("int", "ff"), 
                         n = nn, 
@@ -192,13 +199,15 @@ res <- mclapply(1:nrow(setupDF),function(set){
                                     df = 5, 
                                     knots = 25, 
                                     limits = lD),
-                  control = boost_control(mstop = 300),
+                  control = boost_control(mstop = 1000),
                   timeformula = ~ bbs(t),
                   data = data1))
 
     if(class(m2)!="try-error"){
       
-      ppt <- try(cvrisk(m2, papply = mclapply, folds = cvLong(m2$id, type = "kfold"), mc.cores = coresCV))
+      ppt <- try(cvrisk(m2, papply = mclapply, 
+                        folds = cvLong(m2$id, type = "kfold",
+                                       B = 15), mc.cores = coresCV))
       
       if(class(ppt)!="try-error"){
         

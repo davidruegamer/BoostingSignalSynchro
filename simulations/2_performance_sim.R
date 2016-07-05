@@ -1,5 +1,5 @@
 ############################################################################
-### Simulation code for section 4.2 and 4.4 (step-length comparison)
+### Simulation code for section 4.2 and 4.6 (step-length comparison)
 ############################################################################
 
 source("0_libs_funs.R", chdir = T)
@@ -10,26 +10,29 @@ nrSims = 100
 if(FALSE) nrSims = 2
 
 ### core usage
-coresCV = 5
-coresSettings = 5
+coresCV = 1
+coresSettings = 20
 
 
 ######### settings
 addME <- FALSE # TRUE
-nuC <- c(0.1, 1)
-n <- c(80,320,640)
-obsPerTra <- c(20, 40, 60)
+nuC <- c(0.1#, 1
+         )
+n <- c(80, 160, 320, 640)
+obsPerTra <- c(#20, 
+  40#, 60
+  )
 SNR <- c(1/10, 1, 10)
 setup = c("full", "withoutDoubleVar", "histGameIA", "histRandIA")
+nrRanEf = 10
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(setup = setup,
                             nuC = nuC,
                             obsPerTra = obsPerTra,
                             n = n,
-                            SNR = SNR))
-dropSettingsWhich <- (setupDF$nuC == 1 & setupDF$setup != "withoutDoubleVar")
-setupDF <- setupDF[!dropSettingsWhich,]
+                            SNR = SNR,
+                            nrRanEf = nrRanEf))
 
 resSim <- vector("list",nrow(setupDF))
 
@@ -42,6 +45,7 @@ for(i in 1:nrow(setupDF)){
   nuC = setupDF$nuC[i]
   n = setupDF$n[i]
   SNR = setupDF$SNR[i]
+  nrRanEf = setupDF$nrRanEf[i]
   
   ######### generate data
   dat <- dataGenProc(n = n,
@@ -50,7 +54,8 @@ for(i in 1:nrow(setupDF)){
                      seed = 111,
                      setup = setup,
                      nrOfResp = nrSims,
-                     nrRanEf = 8
+                     nrRanEf = nrRanEf,
+                     nrFacEf = 4
   )
   
   ######### get model specification
@@ -91,7 +96,7 @@ for(i in 1:nrow(setupDF)){
     mod2 <- FDboost(fff,
                     timeformula = ~ bbs(t, df=2.5), 
                     data = dat,
-                    control = boost_control(mstop = 3500, nu = 0.1)
+                    control = boost_control(mstop = 3500, nu = nuC)
     )
     
     gridEnd = 3500
@@ -101,14 +106,17 @@ for(i in 1:nrow(setupDF)){
     ppmat <- createRandomRespFolds(ranVar = dat$g3, sLength = obsPerTra)
     
     ######### validate
-    cvr <- cvrisk(mod2, grid = gridStart:gridEnd, 
-                  folds = ppmat, mc.cores = coresCV)
+    cvr <- if(setup != "histGameIA") cvrisk(mod2, grid = gridStart:gridEnd, 
+                  folds = ppmat, mc.cores = coresCV) else
+                    cvrisk(mod2, folds = cvLong(id = mod2$id, weights =
+                                                  model.weights(mod2), B = 10))
     modFin <- mod2[mstop(cvr)]
     
     findEffects <- which(c(4:7)%in%ind)
     selCourse <- selected(modFin)
     
-    relimseMain <- relimseIAGame <- NA
+    relimseMain <- NA
+    relimseIAGame <- as.list(rep(NA, length(levels(dat$g2)))) 
     relimseIARan <- as.list(rep(NA, length(levels(dat$g3)))) 
     relimseIAGameRan <- as.list(rep(NA, length(levels(interaction(dat$g2,dat$g3)))))
     
@@ -119,9 +127,9 @@ for(i in 1:nrow(setupDF)){
       ## Main Effect
       
       trueX1eff <- dat$trueEffHist(dat$s,dat$t)
-      trueX1eff[trueX1eff == 0] <- NA
+      trueX1eff[lower.tri(trueX1eff)] <- NA
       predEff <- coef(modFin, which = 2, n1 = obsPerTra, n2 = obsPerTra)$smterms[[1]]$value
-      predEff[predEff == 0] <- NA
+      predEff[lower.tri(predEff)] <- NA
 
       relimseMain <- sum(c(((predEff-trueX1eff)^2)),na.rm = T) / sum(c(trueX1eff^2),na.rm = T)
       
@@ -132,13 +140,16 @@ for(i in 1:nrow(setupDF)){
       
       ccc <- coef(modFin, which = 3, n1 = obsPerTra, n2 = obsPerTra)$smterms
       
-      truth1 <- dat$trueEffHistGame(dat$s,dat$t) * dat$trueEffHistGameFac[1]
-      predEff1 <- ccc[[1]][[1]]$value
-      predEff1[predEff1 == 0] <- NA
-      truth1[lower.tri(truth1)] <- NA
-
-      relimseIAGame <- sum(c(((predEff1-truth1)^2)),na.rm = T) / sum(c(truth1^2),na.rm = T)
+      for(nr in 1:length(levels(dat$g2))){
       
+        truth1 <- dat$trueEffHistGame(dat$s,dat$t)*dat$trueEffHistGameFac[nr]
+        predEff1 <- ccc[[1]][[nr]]$value
+        predEff1[lower.tri(predEff1)] <- NA
+        truth1[lower.tri(truth1)] <- NA
+
+        relimseIAGame[[nr]] <- sum(c(((predEff1-truth1)^2)),na.rm = T) / sum(c(truth1^2),na.rm = T)
+      
+      }
     }
     
     ## Interaction Effect with Random Effect Covariate
@@ -153,7 +164,7 @@ for(i in 1:nrow(setupDF)){
         truth1 <- dat$trueEffHistRand[[nr]]
         
         predEff1 <- ccc[[1]][[nr]]$value
-        predEff1[predEff1==0] <- NA
+        predEff1[lower.tri(predEff1)] <- NA
         truth1[lower.tri(truth1)] <- NA
         
         relimseIARan[[nr]] <- sum(c(((predEff1-truth1)^2)),na.rm = T) / sum(c(truth1^2),na.rm = T)
@@ -177,7 +188,7 @@ for(i in 1:nrow(setupDF)){
         truth1 <- dat$trueDoubleEff[[nr]](dat$s,dat$t)
         
         predEff1 <- ccc[[1]][[which(cccSeqFac == levIA[nr])]]$value
-        predEff1[predEff1 == 0] <- NA
+        predEff1[lower.tri(predEff1)] <- NA
         truth1[lower.tri(truth1)] <- NA
         
         relimseIAGameRan[[nr]] <- sum(c(((predEff1-truth1)^2)), na.rm = T) / sum(c(truth1^2), na.rm = T)
@@ -187,15 +198,16 @@ for(i in 1:nrow(setupDF)){
     }
     
     
-    return(cbind(data.frame(relimseMain=relimseMain, relimseIAGame = relimseIAGame, 
-                                        relimseIARan = t(unlist(relimseIARan)), 
-                                        relimseIAGameRan = t(unlist(relimseIAGameRan)),
-                                        mstopIter = mstop(cvr), nrSim = nrSim), setupDF[i,]))
+    return(cbind(data.frame(relimseMain=relimseMain, 
+                            relimseIAGame = t(unlist(relimseIAGame)), 
+                            relimseIARan = t(unlist(relimseIARan)), 
+                            relimseIAGameRan = t(unlist(relimseIAGameRan)),
+                            mstopIter = mstop(cvr), nrSim = nrSim), setupDF[i,]))
     
   }, mc.cores = coresSettings)
   
   resSim[[i]] <- simDF
-  
+  saveRDS(resSim,file=paste0("results/perf/tempPer",i,".RDS"))
 }
 
 ######### save results
