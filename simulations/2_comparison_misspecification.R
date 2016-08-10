@@ -23,11 +23,11 @@ obsPerTra <- c(#20,
 )
 SNR <- c(0.1, 1, 10)
 nrRanEf <- c(10)
-setupMiss = data.frame(dgp = c(#"histGameIA", "histGameIA", 
-                               #"histRandIA", "histRandIA", 
+setupMiss = data.frame(dgp = c("histGameIA", "histGameIA", 
+                               "histRandIA", "histRandIA", 
                                "full"),
-                       fit = c(#"histOnly", "histAndGame", 
-                               #"histOnly", "histAndRand", 
+                       fit = c("histOnly", "histAndGame", 
+                               "histOnly", "histAndRand", 
                                "withoutDoubleVar"))
 setupComb <- 1:nrow(setupMiss)
 
