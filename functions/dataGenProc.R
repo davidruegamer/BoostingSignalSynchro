@@ -149,7 +149,7 @@ dataGenProc <- function(n = 320, # number of trajectories
       Reduce("+",lapply(1:nrFacEf,function(i) (funxbetaG2 * facEff[i]) * as.numeric(g2==i)))
     ) +
     
-    as.numeric(!setup%in%c("histOnly","histAndGame","histGameIA"))*  # random historical effect
+    as.numeric(!setup%in%c("histOnly","histAndGame","histGameIA","histAndRand"))*  # random historical effect
     (Reduce("+",lapply(1:nrRanEf,function(i)funxRanHist[[i]] * as.numeric(g3==i)))) + 
     
     as.numeric(setup=="full")*( # double varying historical effect
