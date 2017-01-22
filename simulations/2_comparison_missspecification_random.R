@@ -10,27 +10,27 @@ nrSims = 100
 if(FALSE) nrSims = 2
 
 ### core usage
-coresCV = 5
-coresSettings = 5
+coresCV = 10
+coresSettings = 6
 
 
 ######### settings
 addME <- FALSE # TRUE
 nuC <- c(0.1)
-n <- c(80, 160, 320)
+n <- c(80, 320)
 obsPerTra <- c(#20, 
   40#, 60
   )
 SNR <- c(0.1, 1, 10)
-nrRanEf <- c(10)
+nrRanEf <- c(10, 20)
 setup = c("histAndRand", "histRandIA")
 
 ######### generate all combinations of different settings
 setupDF <- expand.grid(list(setup=setup,
                             n=n,
-                            SNR=SNR#,
+                            SNR=SNR,
                             #obsPerTra=obsPerTra,
-                            #nrRanEf=nrRanEf
+                            nrRanEf=nrRanEf
                             ))
 setupDF$setup <- as.character(setupDF$setup)
 
@@ -42,7 +42,7 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
   n = setupDF$n[i]
   SNR = setupDF$SNR[i]
   #obsPerTra = setupDF$obsPerTra[i]
-  #nrRanEf = setupDF$nrRanEf[i]
+  nrRanEf = setupDF$nrRanEf[i]
 
   ######### generate data
   dat <- dataGenProc(n = n,
@@ -66,16 +66,16 @@ resSim <- mclapply(1:nrow(setupDF),function(i){
              "bhistx(X1h, df=15, knots=5, differences=2, standard='length') %X% myBlg"
   )
   
-  # ind <- switch(setup,
-  #               histOnly = 4,
-  #               histAndGame = c(4,1),
-  #               histAndRand = c(4,2),
-  #               histGameRand = c(4,1,2,3),
-  #               histGameIA = c(4,5,1),
-  #               histRandIA = c(4,6,2),
-  #               full = c(4,5,6,7,1,2,3),
-  #               withoutDoubleVar = c(4,5,6,1,2,3)
-  # )
+  ind <- switch(setup,
+                histOnly = 4,
+                histAndGame = c(4,1),
+                histAndRand = c(4,2),
+                histGameRand = c(4,1,2,3),
+                histGameIA = c(4,5,1),
+                histRandIA = c(4,6,2),
+                full = c(4,5,6,7,1,2,3),
+                withoutDoubleVar = c(4,5,6,1,2,3)
+  )
   
   fff <- as.formula(paste(baseForm,paste(terms[4],collapse=" + "),sep=" + "))
   
