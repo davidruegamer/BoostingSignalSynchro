@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/61093140.svg)](https://zenodo.org/badge/latestdoi/61093140)
+
 # Detecting Synchronisation in EEG- and EMG-Signals via Boosted Functional Historical Models
 
 ## Online Supplementary
