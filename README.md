@@ -1,6 +1,7 @@
 # Detecting Synchronisation in EEG- and EMG-Signals via Boosted Functional Historical Models
 
 ## Online Supplementary
+for http://onlinelibrary.wiley.com/doi/10.1111/rssc.12241/full
 
 * functions: Functions, which are sourced in simulations in addition to used packages
 * simulations: Simulations of section 4, sorted by the number of subsection
